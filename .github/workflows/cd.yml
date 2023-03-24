@@ -63,4 +63,4 @@ jobs:
             docker rm -f reach-rich-gateway
             docker rmi ${{ secrets.DOCKER_USERNAME }}/reach-rich-gateway
             docker pull ${{ secrets.DOCKER_USERNAME }}/reach-rich-gateway
-            docker-compose up -d
+            docker-compose up -d gateway
