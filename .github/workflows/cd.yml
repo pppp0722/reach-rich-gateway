@@ -1,0 +1,66 @@
+name: CD
+
+on:
+  push:
+    branches: [ "develop" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Gradle Caching
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Config File Write
+        run: |
+          # main 설정 파일 디렉토리로 이동
+          cd ./src/main/resources
+          
+          # application-gateway.yml
+          touch ./application-gateway.yml
+          echo "${{secrets.APPLICATION_GATEWAY}}" >> ./application-gateway.yml
+          
+          # application-jwt.yml
+          touch ./application-jwt.yml
+          echo "${{secrets.APPLICATION_JWT}}" >> ./application-jwt.yml
+        shell: bash
+
+      - name: Gradle Build
+        run: ./gradlew bootJar
+
+      - name: Build Docker Image
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/reach-rich-gateway .
+          docker push ${{ secrets.DOCKER_USERNAME }}/reach-rich-gateway
+
+      - name: Docker Pull & Compose Up
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ec2-user
+          key: ${{ secrets.KEY }}
+          script: |
+            docker rm -f reach-rich-gateway
+            docker rmi ${{ secrets.DOCKER_USERNAME }}/reach-rich-gateway
+            docker pull ${{ secrets.DOCKER_USERNAME }}/reach-rich-gateway
+            docker-compose start -d
