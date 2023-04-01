@@ -35,6 +35,10 @@ jobs:
           # main 설정 파일 디렉토리로 이동
           cd ./src/main/resources
           
+          # application-server.yml
+          touch ./application-server.yml
+          echo "${{secrets.APPLICATION_SERVER}}" >> ./application-server.yml
+          
           # application-gateway.yml
           touch ./application-gateway.yml
           echo "${{secrets.APPLICATION_GATEWAY}}" >> ./application-gateway.yml
