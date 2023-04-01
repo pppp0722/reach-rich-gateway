@@ -43,7 +43,7 @@ public class WebFluxSecurityConfig {
             .authorizeExchange()
             .pathMatchers(
                 "/user/users/login", "/user/users/register", "/user/users/verify-email/**",
-                "/user/refresh-tokens/reissue-access-token"
+                "/user/users/reissue-access-token"
             )
             .permitAll()
             .anyExchange()
