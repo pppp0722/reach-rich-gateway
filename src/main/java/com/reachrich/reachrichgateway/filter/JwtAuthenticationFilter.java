@@ -8,12 +8,16 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.reachrich.reachrichgateway.jwt.JwtAuthenticationToken;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpCookie;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
@@ -44,10 +48,13 @@ public class JwtAuthenticationFilter implements WebFilter {
 
                 if (isValidAccessToken(decodedJWT)) {
                     String audience = decodedJWT.getAudience().get(0);
+                    List<GrantedAuthority> roles =
+                        Arrays.stream(decodedJWT.getClaim("roles").asArray(String.class))
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
 
-                    // TODO: credentials, authorities 다룰지?
                     Authentication jwtAuthenticationToken =
-                        new JwtAuthenticationToken(audience, null, null);
+                        new JwtAuthenticationToken(audience, null, roles);
 
                     return chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder.withAuthentication(

@@ -42,7 +42,7 @@ public class WebFluxSecurityConfig {
             // 인가 설정
             .authorizeExchange()
             .pathMatchers(
-                "/user/users/login", "/user/users/register", "/user/users/verify-email/**",
+                "/user/users/login", "/user/users/register", "/user/users/send-auth-email/**",
                 "/user/users/reissue-access-token"
             )
             .permitAll()
